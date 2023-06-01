@@ -14,7 +14,7 @@ export class RegisterFormComponent implements OnInit {
   form = this.fb.group(
     {
       name: ['', [Validators.required]],
-      email: ['', [Validators.required, Validators.email]],
+      email: ['', [Validators.required, Validators.email], [MyValidators.validateEmailAsync(this.usersService)]],
       password: ['', [Validators.required, Validators.minLength(6), MyValidators.validPassword]],
       confirmPassword: ['', [Validators.required]],
       checkTerms: [false, [Validators.requiredTrue]],
@@ -23,6 +23,7 @@ export class RegisterFormComponent implements OnInit {
       validators: MyValidators.matchPasswords,
     }
   );
+  status: 'loading' | 'success' | 'error' | 'init' = 'init';
 
   constructor(
     private fb: FormBuilder,
@@ -34,10 +35,17 @@ export class RegisterFormComponent implements OnInit {
   register(event: Event) {
     event.preventDefault();
     if (this.form.valid) {
+      this.status = 'loading';
       const value = this.form.value;
       this.usersService.create(value)
-      .subscribe((rta) => {
-        console.log(rta);
+      .subscribe({
+        next: (rta) => {
+          this.status = 'success';
+          console.log(rta);
+        },
+        error: () => {
+          this.status = 'error';
+        }
       });
     } else {
       this.form.markAllAsTouched();
